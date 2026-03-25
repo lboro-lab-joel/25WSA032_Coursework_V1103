@@ -81,7 +81,7 @@ void loop()
 
 Identify key functions responsible for reading sensor data. Try modifying different parameters such as the sampling interval to observe how the system behaves. Work through this step interactively, compile the code, run it on the Arduino, and monitor the output in the serial console.
 
-Next, analyse how the collected data is stored. The system logs temperature readings and outputs them directly to a file on the computer through the serial connection. Introduce a function called `collect_temperature_data()` to collect the temperature from the Grove Temperature Sensor for around 3 minutes, and save it in an array for DFT processing later. The function should use suitable sampling intervals for collecting data. You can test your code using the active mode, the sampling rate in Table 1 (see above).
+Next, analyse how the collected data is stored. The system logs temperature readings and outputs them directly to a file on the computer through the serial connection. Introduce a function called `collect_temperature_data()` to collect the temperature from the Grove Temperature Sensor for around 3 minutes, and save it in an array for DFT processing later. The function should use suitable sampling intervals for collecting data. You can test your code using the active mode, the sampling rate in Table 1 (see above). 
 
 Once data is collected, students will implement the **Discrete Fourier Transform (DFT)** in C to analyse the dominant temperature change frequencies.
 
