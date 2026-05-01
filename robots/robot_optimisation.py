@@ -13,14 +13,9 @@ from robots.ecosystem.factory import ecofactory
 from robots.ecosystem.ecosystem import distance
 import matplotlib.pyplot as plt
 
-DROIDS = 3
-DRONES = 4
-ROBOTS = 4
-PIZZAS = 10
-
 DURATION = "1 week"
 
-BASELINE_CHARGERS = [[40,20]]
+
 OPTIMISED_CHARGERS = [[20, 10], [60, 10], [40, 35]]
 
 HOME = [40, 20, 0]
@@ -90,10 +85,26 @@ def kpis(es): # This Function returns the KPI's for the system once run.
 
 
 
-
-
-plt.close("all")
+plt.close("all") # Refreshing if needed
 plt.ion()
+
+
+def run_baseline():
+  # Stating the Test Variables
+  DROIDS = 3
+  DRONES = 4
+  ROBOTS = 4
+  PIZZAS = 10
+  BASELINE_CHARGERS = [40,20]
+
+
+  print(">> Baseline is running <<")
+  es = ecofactory(robots = ROBOTS, droids = DROIDS, drones = DRONES, chargers = BASELINE_CHARGERS, pizzas = PIZZAS)
+
+  charger, es.duration, es.messages_on = es.chargers()[0], DURATION, False
+  es.display(show = 0)
+  
+
 
 
 es = ecofactory(robots = ROBOTS, drones = DRONES, droids = DROIDS, chargers = CHARGERS, pizzas = PIZZAS)
