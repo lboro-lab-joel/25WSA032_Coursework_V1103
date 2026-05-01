@@ -57,6 +57,24 @@ def create_deliverables(es, target = PIZZA_POOL_SIZE):
     es.create_thing("Pizza")
 
 
+def nearest_charger(bot, charging):
+  return min(chargers, key = lambda c: distance(bot.coordinates, c.coordinates)) # this function allows the robot to find the nearest charger whilst running the code
+
+
+def opportunistic_charge(bot, chargers):
+     # If the bot is going to a station, don't go to this one
+  if bot.station is not None:
+    return None
+    
+  if bot.soc / bot.max_soc >= OPPORTUNISTIC_SOC:
+    return None   # battery is healthy enough
+
+  for charger in chargers:
+    if distance(bot.coordinates, charger.coordinates) <= OPPORTUNISTIC_RADIUS:
+      return charger
+
+  return None
+
 
 
 
