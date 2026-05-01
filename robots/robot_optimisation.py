@@ -23,11 +23,7 @@ HOME = [40, 20, 0]
 
 BASELINE_THRESHOLD = 0.2
 
-OPTIMISED_THRESHOLDS = {
-   "Robot": 0.28, 
-   "Droid": 0.22,
-   "Drone": 0.30
-}
+
 
 OPP_RADIUS = 6
 OPP_SOC = 0.6
@@ -51,6 +47,8 @@ def create_deliverables(es, target = PIZZA_POOL_SIZE):
   for _ in range(max(0, target- ready_count)): # Way to create missing pizzas
     es.create_thing("Pizza")
 
+def nearest_pizza(bot, es):
+  pass
 
 def nearest_charger(bot, chargers):
   return min(chargers, key = lambda c: distance(bot.coordinates, c.coordinates)) # this function allows the robot to find the nearest charger whilst running the code
@@ -130,13 +128,55 @@ def run_baseline():
 
 
 
+def run_optimised():
+  print(">> Optimised is running <>")
 
-es = ecofactory(robots = ROBOTS, drones = DRONES, droids = DROIDS, chargers = CHARGERS, pizzas = PIZZAS)
+  DROIDS = 3
+  DRONES = 4
+  ROBOTS = 4
+  PIZZAS = 10
+  OPP_CHARGERS = ([55, 20], [20, 10], [70, 30])
+  OPP_THRESHOLDS = {
+   "Robot": 0.28, 
+   "Droid": 0.22,
+   "Drone": 0.30
+   }
 
-while es.active:
+  es = ecofactory(robots = ROBOTS, drones = DRONES, droids = DROIDS, chargers = OPP_CHARGERS, pizzas = PIZZAS)
+  chargers, es.duration, es.messages_on = es.charger(), DURATION, False
+  es.display
 
-  for bot in es.bots():
-    pass
+  while es.active:
+    for bot in es.bots():
+      threshold = OPP_THRESHOLDS.get(bot.kind, BASELINE_THRESHOLD)
+      if bot.soc/bot.max_soc < threshold and not bot.station:
+        bot.charge(nearest_charger(bot, chargers))
+      
+      elif bot.activity in ("delivering", "collecting", "moving"): # Topping up whilst moving
+        opp = opportunistic_charge(bot, chargers)
+        
+        if opp:
+          bot.charge(opp)
+
+        if bot.activity == "idle":
+          p = nearest_pizza(bot, es)
+          if p:
+            bot.deliver(p)
+
+          elif not bot.destination and bot.coordinates != HOME: # Go home if the Robot is not at home
+            bot.target_destination = HOME
+
+        if bot.target_destination:
+          bot.move()
+
+      es.update()
+
+    k = kpis(es)
+    print_table()
+    return k
+  
+
+
 
 
 
