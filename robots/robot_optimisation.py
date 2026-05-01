@@ -34,8 +34,8 @@ OPTIMISED_THRESHOLDS = {
    "Drone": 0.30
 }
 
-OPPORTUNISTIC_RADIUS = 6
-OPPORTUNISTIC_SOC = 0.6
+OPP_RADIUS = 6
+OPP_SOC = 0.6
 
 BASELINE_MAX_WEIGHT = 20
 OPTIMISED_MAX_WEIGHT = 40
@@ -57,7 +57,7 @@ def create_deliverables(es, target = PIZZA_POOL_SIZE):
     es.create_thing("Pizza")
 
 
-def nearest_charger(bot, charging):
+def nearest_charger(bot, chargers):
   return min(chargers, key = lambda c: distance(bot.coordinates, c.coordinates)) # this function allows the robot to find the nearest charger whilst running the code
 
 
@@ -66,14 +66,27 @@ def opportunistic_charge(bot, chargers):
   if bot.station is not None:
     return None
     
-  if bot.soc / bot.max_soc >= OPPORTUNISTIC_SOC:
+  if bot.soc / bot.max_soc >= OPP_SOC:
     return None   # battery is healthy enough
 
   for charger in chargers:
-    if distance(bot.coordinates, charger.coordinates) <= OPPORTUNISTIC_RADIUS:
-      return charger
+    if distance(bot.coordinates, charger.coordinates) <= OPP_RADIUS:
+      return charger # returns the closest charger given the distance is small.
 
   return None
+
+
+def kpis(es): # This Function returns the KPI's for the system once run.
+  bots = list(es.registry(kind_class = "Bot").values())
+  return {
+    "bots" : bots,
+    "units": sum(r["units_delivered"] for r in bots), #this is tallying the number of elements in each list
+    "weight": sum(r["weight_delivered"] for r in bots),
+    "energy": sum(r["energy"] for r in bots),
+    "distance": sum(r["distance"] for r in bots),
+    "broken": sum(1 for r in bots if r["status"] == "broken"),
+
+  }
 
 
 
