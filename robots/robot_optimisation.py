@@ -88,6 +88,11 @@ def kpis(es): # This Function returns the KPI's for the system once run.
 plt.close("all") # Refreshing if needed
 plt.ion()
 
+def print_table():
+  pass
+
+def print_comparison():
+  pass
 
 def run_baseline():
   # Stating the Test Variables
@@ -103,7 +108,26 @@ def run_baseline():
 
   charger, es.duration, es.messages_on = es.chargers()[0], DURATION, False
   es.display(show = 0)
-  
+
+  while es.active:
+    for bot in es.bots():
+      if bot.soc/bot.max_soc < BASELINE_THRESHOLD and not bot.station: # if the bot is less than the thresholda nd not at a charger
+        bot.charge(charger)
+      if bot.activity == "idle": # if the bot is available, give it a pizza
+        for p in es.deliverables():
+          if p.status == "ready":
+            bot.deliver(p)
+            break
+        if not bot.destination and bot.coordinates != HOME: # When the robot is not at home
+          bot.target_destination = HOME
+      if bot.target_destination: # move the robot to the target destination
+        bot.move()
+    es.update()
+
+    k = kpis(es)
+    print_table()
+    return(k)
+
 
 
 
