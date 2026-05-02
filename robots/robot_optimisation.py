@@ -83,11 +83,20 @@ def kpis(es): # This Function returns the KPI's for the system once run.
 
 
 
-plt.close("all") # Refreshing if needed
-plt.ion()
+def print_table(k, label):
+    #Print a per-bot KPI table for one run. This is printed using f strings
+    print(f"\n{'='*72}\n  {label}\n{'='*72}")
+    print(f"{'Name':<8} {'Kind':<7} {'Status':<9} {'Units':>6} {'Weight':>8} {'Energy':>8} {'Dist':>8}")
+    print("-" * 72)
+    for r in k['bots']:
+        flag = "  *** BROKEN ***" if r['status'] == 'broken' else ""
+        print(f"{r['name']:<8} {r['kind']:<7} {r['status']:<9} "
+              f"{r['units_delivered']:>6} {r['weight_delivered']:>8} "
+              f"{r['energy']:>8.0f} {r['distance']:>8.1f}{flag}")
+    print("-" * 72)
+    print(f"{'TOTALS':<25} {k['units']:>6} {k['weight']:>8} {k['energy']:>8.0f} {k['distance']:>8.1f}")
+    print(f"  Broken bots: {k['broken']}\n{'='*72}")
 
-def print_table():
-  pass
 
 def print_comparison():
   pass
@@ -176,6 +185,14 @@ def run_optimised():
     return k
   
 
+
+if __name__ == "__main__":
+  plt.close("all")
+  plt.ion()
+
+  b = run_baseline()
+  o = run_optimised()
+  print_comparison() # This needs to be programmed to print out the KPI's
 
 
 
