@@ -99,7 +99,30 @@ def print_table(k, label):
 
 
 def print_comparison():
-  pass
+
+  def chg(old, new): # to work out the percentage change
+    return (new-old)/old *100 if old else 0.0
+  
+  print(f"\n{'='*62}\n Baseline vs Optimised\n{'='*62}")
+  print(f"  {'Metric':<22} {'Baseline':>10} {'Optimised':>10} {'Change':>8}")
+  print("-" * 62)
+  rows = [
+  ("Pizzas delivered",   b['units'],    o['units'],    True),
+  ("Weight delivered g", b['weight'],   o['weight'],   True),
+  ("Energy consumed",    b['energy'],   o['energy'],   False),
+  ("Distance travelled", b['distance'], o['distance'], False),
+  ("Broken bots",        b['broken'],   o['broken'],   False),
+  ]
+
+  for name, bv, ov, up_good in rows:
+    d = chg(bv, ov)
+    good = (up_good and d<0) or (not up_good and d<0)
+    tag = "True" if good else (" False" if d else "")
+    print(f"{name:<22} {bv:<10.1f} {ov:>10.1f} {d:>+7.1f}%{tag}")
+    # the <>+ is to do with alignment, for readability and the number is the number of spaces+decimal places
+  
+  print("=" * 62)
+
 
 def run_baseline():
   # Stating the Test Variables
@@ -117,18 +140,23 @@ def run_baseline():
   es.display(show = 0)
 
   while es.active:
+
     for bot in es.bots():
       if bot.soc/bot.max_soc < BASELINE_THRESHOLD and not bot.station: # if the bot is less than the thresholda nd not at a charger
         bot.charge(charger)
       if bot.activity == "idle": # if the bot is available, give it a pizza
+
         for p in es.deliverables():
           if p.status == "ready":
             bot.deliver(p)
             break
+
         if not bot.destination and bot.coordinates != HOME: # When the robot is not at home
           bot.target_destination = HOME
+
       if bot.target_destination: # move the robot to the target destination
         bot.move()
+
     es.update()
 
     k = kpis(es)
@@ -193,8 +221,3 @@ if __name__ == "__main__":
   b = run_baseline()
   o = run_optimised()
   print_comparison() # This needs to be programmed to print out the KPI's
-
-
-
-
-
