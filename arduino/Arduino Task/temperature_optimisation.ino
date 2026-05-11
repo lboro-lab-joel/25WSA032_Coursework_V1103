@@ -1,18 +1,29 @@
 // Loovee @ 2015-8-26
 #include <avr/sleep.h> // for debugging
 #include <math.h>
+
 const int B = 4275000;         // B value of the thermistor
 const int R0 = 100000;         // R0 = 100k
 const int pinTempSensor = A0;  // Grove - Temperature Sensor connect to A0
+
 const int N = 10;
+const FS_DEFAULT = 1 //sampling frequency
+const FS_MIN = 0.5
+const FS_MAX = 4
+
 const float pi = 3.1415926535;
 int count = 0;
+
 int time_data[N];
 float temp_data[N];
-float real[N];
-float imaginary[N];
-int del = 1000; //How often the reading will be taken.
+float realPart[N];
+float imagPart[N];
+float magnitude[N];
+float freqValues[N];
 
+int del = 1000; //How often the reading will be taken.
+int sampleCount = 0;
+float fs = FS_DEFAULT; //setting the initial sampling rate
 
 void setup() {
   Serial.begin(9600);
@@ -31,14 +42,15 @@ void loop() {
   delay(del);
 }
 
-float collect_temperature_data(float temp) {
-  time_data[count] = count; // This takes a reoccuring update in the active mode.
-  temp_data[count] = temp;
-  count++;
+bool collect_temperature_data(float temp) {
+  time_data[sampleCount] = sampleCount * (1/fs); // Actual time in seconds (recurring)
+  temp_data[sampleCount] = temp;
+  sampleCount++;
+
   //Serial.println(temp_data[count]);
-  if (count > 10){ // remove this if the recuring reading is not wanted.
-    count = 0;
-    stop();
+  if (sampleCount > 10){ // remove this if the recuring reading is not wanted.
+    sampleCount = 0;
+    return True;
   }
 
   int num = sizeof(temp_data)/sizeof(int);
@@ -52,16 +64,16 @@ float collect_temperature_data(float temp) {
 
 float apply_dft(){
   for(int k=0; k<N; k++){
-    real[k] = 0; //I needed this because arduino doesnt store complex numbers.
+    realPart[k] = 0; //I needed this because arduino doesnt store complex numbers.
     imag[k] = 0;
 
     for(int n=0, n<N, n++){
       float angle = 2*pi*k*n/N
-      real[k] = temp_data[n]*cos(angle)
+      realPart[k] = temp_data[n]*cos(angle)
       imag[k] = temp_data[n]*cos(angle)
     }
   }
-  magnitude[k] = sqrt(real[k]*real[k] + imag[k]*imag[k]); //As mentioned in task 2.
+  magnitude[k] = sqrt(realPart[k]*realPart[k] + imag[k]*imag[k]); //As mentioned in task 2.
   freqValues[k] = (float)k * fs / N;  //The Frequency of the bin (frequency interval)
 
   float dominantFreq = 0; //Where the dominant frequency will be stored.
