@@ -63,14 +63,15 @@ bool collect_temperature_data(float temp) {
 }
 
 float apply_dft(){
+
   for(int k=0; k<N; k++){
     realPart[k] = 0; //I needed this because arduino doesnt store complex numbers.
-    imag[k] = 0;
+    imagPart[k] = 0;
 
-    for(int n=0, n<N, n++){
+    for(int n=0; n<N; n++){
       float angle = 2*pi*k*n/N
-      realPart[k] = temp_data[n]*cos(angle)
-      imag[k] = temp_data[n]*cos(angle)
+      realPart[k] += temp_data[n]*cos(angle)
+      imagPart[k] -= temp_data[n]*sin(angle) 
     }
   }
   magnitude[k] = sqrt(realPart[k]*realPart[k] + imag[k]*imag[k]); //As mentioned in task 2.
@@ -84,9 +85,9 @@ float apply_dft(){
       if (magnitude[k] > maxMag) {
           maxMag = magnitude[k];
           dominantFreq = freqValues[k];
-          return dominantFreq
       }
-}
+  }
+  return dominantFreq
 }
   
 void stop(){
