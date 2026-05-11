@@ -89,7 +89,27 @@ float apply_dft(){
   }
   return dominantFreq
 }
-  
+
+//Defining the thrresholds to the modes
+const float FREQ_ACTIVE_THRESHOLD = 0.5;
+const float FREQ_IDLE_THRESHOLD = 0.1
+
+enum PowerMode{ 
+  ACTIVE,
+  IDLE,
+  POWER_DOWN
+};
+
+PowerMode decide_power_mode(float dominantFreq) { // returns the mode based on the dominant frequensy (active, idle or power down)
+  if (dominantFreq > FREQ_ACTIVE_THRESHOLD) {
+    return ACTIVE;
+  } else if (dominantFreq > FREQ_IDLE_THRESHOLD) {
+    return IDLE;
+  } else {
+    return POWER_DOWN;
+  }
+}
+
 void stop(){
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
