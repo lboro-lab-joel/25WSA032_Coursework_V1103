@@ -23,6 +23,7 @@ float freqValues[N];
 
 int del = 1000; //How often the reading will be taken.
 int sampleCount = 0;
+int idleCycleCount = 0
 float fs = FS_DEFAULT; //setting the initial sampling rate
 
 void setup() {
@@ -34,12 +35,36 @@ void loop() {
   float R = 1023.0 / a - 1.0;
   R = R0 * R;
   float temperature = 1.0 / (log(R / R0) / B + 1 / 298.15) - 273.15; 
-  collect_temperature_data(temperature);
-  Serial.print("temperature = ");
-  Serial.println(temperature);
-  float freq = apply_dft()
-  Serial.print(freq);
-  delay(del);
+  
+  
+  bool bufferFull = collect_temperature_data(temperature);
+  if (bufferFull){
+    //Runing the analysis itself
+    float dominantFreq = apply_dft()
+    Powermode mode = decide_power_mode(dominantFreq);
+    //Myquist's theorm adjustment
+    float newFs = dominantFreq * 2;
+    if (newFs < FS_MIN) newFs = FS_MIN;
+    if (newFs > FS_MIN) newFs = FS_MAX;    
+    fs = newFs;
+    delayMs = (int)(1000/fs);
+
+  }
+  if (mode == IDLE){
+    idleCycleCount++;
+  }
+  else{
+    idleCycleCount = 0;
+  }
+
+  if (idleCycleCount >= 5){
+    mode = POWER_DOWN;
+  }
+  send_data_to_pc();
+
+  if (mode == POWER_DOWN){
+    enterSleep();
+  }
 }
 
 bool collect_temperature_data(float temp) {
