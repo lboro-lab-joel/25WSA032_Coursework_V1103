@@ -7,13 +7,13 @@ const int B = 4275000;         // B value of the thermistor
 const int R0 = 100000;         // R0 = 100k
 const int pinTempSensor = A0;  // Grove - Temperature Sensor connect to A0
 
-const int N = 180;
+const int N = 60;
 const float FS_DEFAULT = 1; //sampling frequency
 const float FS_MIN = 0.5;
 const float FS_MAX = 4;
 
 const float pi = 3.1415926535;
-int count = 0;
+
 
 float time_data[N];
 float temp_data[N];
@@ -28,9 +28,9 @@ int idleCycleCount = 0;
 float fs = FS_DEFAULT; //setting the initial sampling rate
 
 const int MA_WINDOW = 10;
-float     variationHistory[MA_WINDOW];
-int       variationIndex  = 0;
-bool      historyFull     = false;
+float variationHistory[MA_WINDOW];
+int variationIndex = 0;
+bool historyFull = false;
 
 //Defining the thrresholds to the modes
 const float FREQ_ACTIVE_THRESHOLD = 0.5;
