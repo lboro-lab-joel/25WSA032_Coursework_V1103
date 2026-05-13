@@ -155,3 +155,19 @@ void enterSleep() {
 
 // Watchdog interrupt service routine — just wakes the CPU, does nothing else
 ISR(WDT_vect) { }
+
+void send_data_to_pc(){
+  //CSV header
+  Serial.println("Time, Temperature, Frequency, Magnitude");
+
+for(int i = 0; i< N; i++){
+  Serial.print(time_data[i],2); // 2 decimal places
+  Serial.print(",");
+  Serial.print(temp_data[i],2);
+  Serial.print(",");
+  Serial.print(freqValues[i],4); // 4 decimal places for small values
+  Serial.print(",");
+  Serial.print(magnitude[i],2);
+}
+  Serial.println("# END"); // indicationn of end of transmission
+}
