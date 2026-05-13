@@ -1,5 +1,6 @@
 // Loovee @ 2015-8-26
 #include <avr/sleep.h> // for debugging
+#include <avr/wdt.h>
 #include <math.h>
 
 const int B = 4275000;         // B value of the thermistor
@@ -65,6 +66,7 @@ void loop() {
   if (mode == POWER_DOWN){
     enterSleep();
   }
+  delay (delayMs)
 }
 
 bool collect_temperature_data(float temp) {
@@ -135,8 +137,21 @@ PowerMode decide_power_mode(float dominantFreq) { // returns the mode based on t
   }
 }
 
-void stop(){
+//Putting Arduino into low-power sleep mode
+void enterSleep() {
+  Serial.println("# Entering Power Down sleep...");
+  Serial.flush();                        // make sure serial output is sent before sleeping
+
+  wdt_enable(WDTO_8S);                   // watchdog wakes us after 8 seconds
+  WDTCSR |= (1 << WDIE);                 // enable watchdog interrupt (not reset)
+
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
-  sleep_cpu();  // halts here.
+  sleep_cpu();                           // sleeps here until watchdog fires
+
+  sleep_disable();                       // continues here after waking
+  wdt_disable();                         // turn off watchdog until next sleep
 }
+
+// Watchdog interrupt service routine — just wakes the CPU, does nothing else
+ISR(WDT_vect) { }
