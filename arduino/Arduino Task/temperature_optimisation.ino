@@ -7,25 +7,40 @@ const int B = 4275000;         // B value of the thermistor
 const int R0 = 100000;         // R0 = 100k
 const int pinTempSensor = A0;  // Grove - Temperature Sensor connect to A0
 
-const int N = 10;
-const FS_DEFAULT = 1 //sampling frequency
-const FS_MIN = 0.5
-const FS_MAX = 4
+const int N = 180;
+const float FS_DEFAULT = 1; //sampling frequency
+const float FS_MIN = 0.5;
+const float FS_MAX = 4;
 
 const float pi = 3.1415926535;
 int count = 0;
 
-int time_data[N];
+float time_data[N];
 float temp_data[N];
 float realPart[N];
 float imagPart[N];
 float magnitude[N];
 float freqValues[N];
 
-int del = 1000; //How often the reading will be taken.
+int delayMs = 1000; //How often the reading will be taken.
 int sampleCount = 0;
-int idleCycleCount = 0
+int idleCycleCount = 0;
 float fs = FS_DEFAULT; //setting the initial sampling rate
+
+const int MA_WINDOW = 10;
+float     variationHistory[MA_WINDOW];
+int       variationIndex  = 0;
+bool      historyFull     = false;
+
+//Defining the thrresholds to the modes
+const float FREQ_ACTIVE_THRESHOLD = 0.5;
+const float FREQ_IDLE_THRESHOLD = 0.1;
+
+enum PowerMode{ 
+  ACTIVE,
+  IDLE,
+  POWER_DOWN
+};
 
 void setup() {
   Serial.begin(9600);
@@ -41,16 +56,23 @@ void loop() {
   bool bufferFull = collect_temperature_data(temperature);
   if (bufferFull){
     //Runing the analysis itself
-    float dominantFreq = apply_dft()
-    Powermode mode = decide_power_mode(dominantFreq);
+    float dominantFreq = apply_dft();
+    float cycleVariation= calculate_variation();
+    float avgVariation = update_moving_average(cycleVariation);
+
+    PowerMode mode = decide_power_mode(dominantFreq);
+    const float STABLE_THRESHOLD = 2;
+    if (avgVariation < STABLE_THRESHOLD && mode == ACTIVE){ //checks the state of the readings
+      mode = IDLE;
+    }
+
     //Myquist's theorm adjustment
     float newFs = dominantFreq * 2;
     if (newFs < FS_MIN) newFs = FS_MIN;
-    if (newFs > FS_MIN) newFs = FS_MAX;    
+    if (newFs > FS_MAX) newFs = FS_MAX;    
     fs = newFs;
     delayMs = (int)(1000/fs);
-
-  }
+  
   if (mode == IDLE){
     idleCycleCount++;
   }
@@ -66,27 +88,22 @@ void loop() {
   if (mode == POWER_DOWN){
     enterSleep();
   }
-  delay (delayMs)
+  }
+  delay(delayMs);
+
 }
 
 bool collect_temperature_data(float temp) {
-  time_data[sampleCount] = sampleCount * (1/fs); // Actual time in seconds (recurring)
+  time_data[sampleCount] = sampleCount * (1.0/fs); // Actual time in seconds (recurring)
   temp_data[sampleCount] = temp;
   sampleCount++;
 
   //Serial.println(temp_data[count]);
-  if (sampleCount > 10){ // remove this if the recuring reading is not wanted.
+  if (sampleCount >= N){ // remove this if the recuring reading is not wanted.
     sampleCount = 0;
-    return True;
+    return true;
   }
-
-  int num = sizeof(temp_data)/sizeof(int);
-  for (int x = 0; x<num;x++){
-    Serial.print(temp_data[x]); //Debugging purposes
-    Serial.print(' ');
-  }
-  Serial.println();
-
+  return false;
 }
 
 float apply_dft(){
@@ -96,14 +113,14 @@ float apply_dft(){
     imagPart[k] = 0;
 
     for(int n=0; n<N; n++){
-      float angle = 2*pi*k*n/N
-      realPart[k] += temp_data[n]*cos(angle)
-      imagPart[k] -= temp_data[n]*sin(angle) 
+      float angle = 2*pi*k*n/N;
+      realPart[k] += temp_data[n]*cos(angle);
+      imagPart[k] -= temp_data[n]*sin(angle);
     }
+    magnitude[k] = sqrt(realPart[k]*realPart[k] + imagPart[k]*imagPart[k]); //As mentioned in task 2.
+    freqValues[k] = (float)k * fs / N;  //The Frequency of the bin (frequency interval)
   }
-  magnitude[k] = sqrt(realPart[k]*realPart[k] + imag[k]*imag[k]); //As mentioned in task 2.
-  freqValues[k] = (float)k * fs / N;  //The Frequency of the bin (frequency interval)
-
+  
   float dominantFreq = 0; //Where the dominant frequency will be stored.
   float maxMag = 0;
 
@@ -114,18 +131,10 @@ float apply_dft(){
           dominantFreq = freqValues[k];
       }
   }
-  return dominantFreq
+  return dominantFreq;
 }
 
-//Defining the thrresholds to the modes
-const float FREQ_ACTIVE_THRESHOLD = 0.5;
-const float FREQ_IDLE_THRESHOLD = 0.1
 
-enum PowerMode{ 
-  ACTIVE,
-  IDLE,
-  POWER_DOWN
-};
 
 PowerMode decide_power_mode(float dominantFreq) { // returns the mode based on the dominant frequensy (active, idle or power down)
   if (dominantFreq > FREQ_ACTIVE_THRESHOLD) {
@@ -135,6 +144,28 @@ PowerMode decide_power_mode(float dominantFreq) { // returns the mode based on t
   } else {
     return POWER_DOWN;
   }
+}
+
+float calculate_variation() {
+  float totalVariation = 0.0;
+  for (int i = 1; i < N; i++) {
+    totalVariation += abs(temp_data[i] - temp_data[i - 1]);
+  }
+  return totalVariation;
+}
+
+float update_moving_average(float newVariation) {
+  variationHistory[variationIndex] = newVariation;
+  variationIndex = (variationIndex + 1) % MA_WINDOW;
+
+  if (variationIndex == 0) historyFull = true;
+
+  int   count = historyFull ? MA_WINDOW : variationIndex;
+  float total = 0.0;
+  for (int i = 0; i < count; i++) {
+    total += variationHistory[i];
+  }
+  return total / count;
 }
 
 //Putting Arduino into low-power sleep mode
@@ -167,7 +198,7 @@ for(int i = 0; i< N; i++){
   Serial.print(",");
   Serial.print(freqValues[i],4); // 4 decimal places for small values
   Serial.print(",");
-  Serial.print(magnitude[i],2);
+  Serial.println(magnitude[i],2);
 }
   Serial.println("# END"); // indicationn of end of transmission
 }
