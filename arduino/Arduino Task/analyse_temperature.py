@@ -73,6 +73,6 @@ axes[2,1].set_visible(False)
 
 # Saving the plot as a PNG to show the program can output graphical files.
 plt.tight_layout()
-plt.savefig("temperature_analysis.png", dpi = 150, bbox_inches = "tight")
-print("Saved to temperature_analysis.png")
+plt.savefig("temperature_analysis_live.png", dpi = 150, bbox_inches = "tight")
+print("Saved to temperature_analysis_live.png")
 plt.show()
