@@ -1,7 +1,7 @@
 The experiment:
 Warmed up the sensor by hand, and let it cool to room temperature
 
-The graph example I will be taking is in the temperature_analysis.png.
+The graph example I will be taking is in the temperature_analysis.png in file location F530917_25WSA032_Coursework_V1103.
 
 
 Time-Domain Behaviour:
