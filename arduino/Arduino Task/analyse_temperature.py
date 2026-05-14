@@ -39,7 +39,7 @@ ax.set_ylabel("Magnitude")
 ax.grid(True, linestyle = "--", alpha = 0.5)
 
 # Raw vs Smoothed Temperature - using mean
-ax       = axes[1, 0]
+ax = axes[1, 0]
 smoothed = pd.Series(temperature).rolling(window=MA_WINDOW, min_periods=1).mean()
 ax.plot(time, temperature, color="steelblue", alpha=0.5, label="Raw")
 ax.plot(time, smoothed,    color="crimson",   linewidth=2, label=f"Smoothed (window={MA_WINDOW})")
@@ -56,3 +56,23 @@ ax.set_title("Plot 4: Histogram of temperature readings")
 ax.set_xlabel("Temperature (*C)")
 ax.set_ylabel("Count")
 ax.grid(True, linestyle = "--", alpha = 0.5, axis = "y")
+
+# Temperature change rate against time
+ax = axes[2,0]
+change_rate = np.diff(temperature) # difference between consecutive samples
+ax.plot(time[:-1], change_rate, color = "darkorange")
+ax.axhline(0, color = "grey", linestyle = "--", linewidth = 0.8)
+ax.set_title("Plot5; Temperature Chnage Rate vs Time")
+ax.set_xlabel("Time (s)")
+ax.set_ylabel("Change Rate (*C/ sample)")
+ax.grid(True, linestyle = "--", alpha  = 0.5)
+
+#Hiding the 6th plot
+axes[2,1].set_visible(False)
+
+
+# Saving the plot as a PNG to show the program can output graphical files.
+plt.tight_layout()
+plt.savefig("temperature_analysis.png", dpi = 150, bbox_inches = "tight")
+print("Saved to temperature_analysis.png")
+plt.show()
