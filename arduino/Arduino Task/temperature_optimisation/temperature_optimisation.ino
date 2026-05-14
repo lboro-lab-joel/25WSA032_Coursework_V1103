@@ -61,6 +61,7 @@ void loop() {
     float avgVariation = update_moving_average(cycleVariation);
 
     PowerMode mode = decide_power_mode(dominantFreq);
+
     const float STABLE_THRESHOLD = 2;
     if (avgVariation < STABLE_THRESHOLD && mode == ACTIVE){ //checks the state of the readings
       mode = IDLE;
@@ -87,8 +88,9 @@ void loop() {
 
   if (mode == POWER_DOWN){
     enterSleep();
+  } 
   }
-  }
+
   delay(delayMs);
 
 }
@@ -189,7 +191,7 @@ ISR(WDT_vect) { }
 
 void send_data_to_pc(){
   //CSV header
-  Serial.println("Time, Temperature, Frequency, Magnitude");
+  Serial.println("Time,Temperature,Frequency,Magnitude");
 
 for(int i = 0; i< N; i++){
   Serial.print(time_data[i],2); // 2 decimal places

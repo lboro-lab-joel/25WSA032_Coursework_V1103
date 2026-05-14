@@ -7,7 +7,7 @@ OUTPUT_FILE = "temperature_data.csv"
  
 print("Connecting to Arduino... (waiting ~1 minute for first cycle)")
  
-ser  = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=10)
+ser  = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=120)
 time.sleep(2)  # wait for Arduino to reset
  
 lines = []
